@@ -5,10 +5,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class ClienteInseguro {
-
-	public static final int PUERTO = 8080;
 
 	public static final String SERVIDOR = "localhost";
 
@@ -18,7 +17,12 @@ public class ClienteInseguro {
 		PrintWriter escritor = null;
 		BufferedReader lector = null;
 
-		System.out.println("Cliente ...");
+		System.out.println("Cliente SIN Seguridad");
+		
+		System.out.println("Cliente SIN Seguridad: Establezca puerto de conexion");
+		Scanner port = new Scanner(System.in);
+		int PUERTO = port.nextInt();
+		port.close();
 
 		try {
 			socket = new Socket(SERVIDOR,PUERTO);

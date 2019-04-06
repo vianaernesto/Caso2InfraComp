@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -25,61 +26,109 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 
 public class ProtocoloClienteSeguro {
+	
+	public static final String SIMETRICO = "AES";
+	
+	public static final String ASIMETRICO = "RSA";
+	
+	public static final String HMAC = "HMACSHA256";
+	
+	public static int id;
 
 	public static void procesar(BufferedReader stdIn, BufferedReader pIn,PrintWriter pOut) throws Exception {
 
 		pOut.println("HOLA");
 
+		System.out.println("Enviando HOLA al servidor");
+			
 		String fromServer="";
 
 		if((fromServer = pIn.readLine())!= null) {
 			System.out.println("Respuesta del Servidor: " + fromServer );
 		}
 
-		pOut.println("ALGORITMOS:AES:RSA:HMACSHA1");
+		System.out.println("Algoritmos que se van a usar:");
+		System.out.println("Para manejo de confidencialidad de envio de llaves: " + ASIMETRICO);
+		System.out.println("Para manejo de confidencialidad de sesion: " + SIMETRICO);
+		System.out.println("Para manejo de integridad: " + HMAC);
+		System.out.println("Enviando al servidor: ALGORITMOS:" + SIMETRICO + ":" + ASIMETRICO + ":" + HMAC);
+		
+		pOut.println("ALGORITMOS:" + SIMETRICO + ":" + ASIMETRICO + ":" + HMAC);
 
 		if((fromServer = pIn.readLine())!= null) {
 			System.out.println("Respuesta del Servidor: " + fromServer );
 		}
 
-		KeyPair llaveCliente = KeyPairGenerator.getInstance("RSA", new BouncyCastleProvider()).generateKeyPair();
-		pOut.println(generarCertificado(llaveCliente));
+		// Creando llaves Asimetricas que el cliente va a utilizar
+		KeyPair llaveCliente = KeyPairGenerator.getInstance(ASIMETRICO, new BouncyCastleProvider()).generateKeyPair();
+		
+		// Generacion del certificado
+		String certificado = generarCertificado(llaveCliente);
+		
+		System.out.println("Enviando el certificado del cliente: " + certificado);	
+
+		// Envio del Certificado
+		pOut.println(certificado);
 
 		if((fromServer = pIn.readLine())!= null) {
-			System.out.println("Respuesta del Servidor: " + fromServer );
+			System.out.println("Certificado del Servidor: " + fromServer );
 		}
 		
+		// Se obtiene la llave publica del servidor mediante el certificado.
 		PublicKey llaveServidor = leerCertificado(fromServer).getPublicKey();
-
-		byte[] arr = new byte[32];
-		SecretKey sesion = new SecretKeySpec(arr,"AES");
 		
+		// Se crea el par de llaves de servidor para utilizar en la desencripcion
+		KeyPair parServidor= new KeyPair(llaveServidor,null);
+
+		// Se crea la llave de sesion
+		byte[] arr = new byte[32];
+		SecretKey sesion = new SecretKeySpec(arr,SIMETRICO);
+		
+		// Se cifra la llave de sesion con la llave publicad del servidor.
 		String llaveCifrada= DatatypeConverter.printHexBinary(cifradoAsimetrico(llaveServidor,sesion.getEncoded()));
+		
+		System.out.println("Enviando llave de sesion encriptada con llave publica del servidor:" + llaveCifrada);	
+		
+		// Enviando al servidor.
 		pOut.println(llaveCifrada);
 		
 		if((fromServer = pIn.readLine())!= null) {
-			System.out.println("Respuesta del Servidor: " + fromServer );
+			System.out.println("Respuesta del Servidor, llave de sesion encriptada con llave publica del cliente: " + fromServer );
 		}
 		
+		//Convirtiendo la llave de sesion cifrada recibida a byte[]
 		byte[] llaveServidorCifrada= DatatypeConverter.parseHexBinary(fromServer);
-		SecretKey llaveLS=new SecretKeySpec(descifradoAsimetrico(llaveCliente,llaveServidorCifrada),"AES");
 		
-		System.out.println("Escriba la coordenada: ");
-		Scanner cordenadas= new Scanner(System.in);
-		String msg =cordenadas.nextLine(); 
-		cordenadas.close();
-		
-		byte[] coordenadasEncriptadas = cifradoSimetricoAES(llaveLS,msg.getBytes());
-		//byte[] msgEnBytesEncriptados= cifradoSimetricoBlowfish(llaveLS,msg.getBytes());
-		
-		byte[] coordenadasHMAC = hmac(msg.getBytes(),llaveLS, "HMACSHA1");
+		// Se descifra la llave de sesion para utilizarse en el intercambio de datos.
+		SecretKey llaveLS=new SecretKeySpec(descifradoAsimetrico(llaveCliente,llaveServidorCifrada,"privada"),SIMETRICO);
 
-		String criptoStr= DatatypeConverter.printHexBinary(coordenadasEncriptadas);
-		String hmacStr= DatatypeConverter.printHexBinary(coordenadasHMAC);
-
-		
+		System.out.println("Se envia OK al Servidor");
 		
 		pOut.println("OK");
+		
+		//Se obtienen los datos de coordenadas.
+		String gradosLatitud = String.valueOf(Math.round((Math.random() * 100)));
+		String minutosLatitud = String.valueOf( Math.random() * 100);
+		String gradosLongitud = String.valueOf(Math.round((Math.random() * 100)));
+		String minutosLongitud = String.valueOf(Math.random() * 100);
+		String msg = id + ";" + gradosLatitud + " " + minutosLatitud + "," + gradosLongitud + " " + minutosLongitud;
+
+		System.out.println("Datos: " + msg);
+		
+		// Se encriptan los datos.
+		byte[] coordenadasEncriptadas = cifradoSimetricoAES(llaveLS,msg.getBytes());
+		
+		// se obtiene el codigo de autenticacion dado el mensaje y las llaves.
+		byte[] codigoAutenticacion = hmac(msg.getBytes(),llaveLS, HMAC);
+
+		// se obtienen su version hexadecimal
+		String criptoStr= DatatypeConverter.printHexBinary(coordenadasEncriptadas);
+		String hmacStr= DatatypeConverter.printHexBinary(codigoAutenticacion);
+
+		System.out.println("Se envian los datos encriptados con la llave de sesion: " + criptoStr);
+		System.out.println("Se envia el codigo de autenticacion HMAC " + hmacStr);
+		
+		//Se envian al servidor.
 		pOut.println(criptoStr);
 		pOut.println(hmacStr);
 		
@@ -87,7 +136,18 @@ public class ProtocoloClienteSeguro {
 			System.out.println("Respuesta del Servidor: " + fromServer );
 		}
 		
+		System.out.println("Se recibe el codigo de autenticacion cifrado con la llave privada del servidor");
 		
+		// Se convierte la respuesta del servidor.
+		byte[] respuestaServidor = DatatypeConverter.parseHexBinary(fromServer);
+		// Se obtiene el codigo de autenticacion
+		byte[] hmacRespuesta= descifradoAsimetrico(parServidor,respuestaServidor,"publica");
+		
+
+		
+		if(Arrays.equals(hmacRespuesta, codigoAutenticacion)) {
+			System.out.println("Verificacion de integridad: OK");
+		}
 		
 	}
 
@@ -126,15 +186,24 @@ public class ProtocoloClienteSeguro {
 	}
 	
 	public static byte[] cifradoAsimetrico(PublicKey llave, byte[] msg) throws Exception {
-		Cipher cipher = Cipher.getInstance("RSA");
+		Cipher cipher = Cipher.getInstance(ASIMETRICO);
 		cipher.init(Cipher.ENCRYPT_MODE, llave);
 		return cipher.doFinal(msg);
 	}
 	
-	public static byte[] descifradoAsimetrico(KeyPair llave, byte[] msg) throws Exception {
-		Cipher cipher = Cipher.getInstance("RSA");
+	public static byte[] descifradoAsimetrico(KeyPair llave, byte[] msg,String tipoLlave) throws Exception {
+		
+		byte[] descifrado = null;
+		if(tipoLlave.equals("privada")) {
+		Cipher cipher = Cipher.getInstance(ASIMETRICO);
 		cipher.init(Cipher.DECRYPT_MODE, llave.getPrivate());
-		return cipher.doFinal(msg);
+		descifrado = cipher.doFinal(msg);
+		} else if (tipoLlave.equals("publica")){
+			Cipher cipher = Cipher.getInstance(ASIMETRICO);
+			cipher.init(Cipher.DECRYPT_MODE, llave.getPublic());
+			descifrado = cipher.doFinal(msg);
+		}
+		return descifrado;
 	}
 	
 	public static byte[] cifradoSimetricoAES(SecretKey llave, byte[] clearText) throws Exception {
@@ -147,12 +216,6 @@ public class ProtocoloClienteSeguro {
 		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 		cipher.init(Cipher.DECRYPT_MODE, llave);
 		return cipher.doFinal(msg);
-	}
-	
-	public static byte[] cifradoSimetricoBlowfish(SecretKey llave, byte[] clearText) throws Exception {
-		Cipher cipher = Cipher.getInstance("Blowfish");
-		cipher.init(Cipher.ENCRYPT_MODE, llave);
-		return cipher.doFinal(clearText);
 	}
 	
 	private static byte[] hmac(byte[] msg, SecretKey key, String alg) throws Exception {
