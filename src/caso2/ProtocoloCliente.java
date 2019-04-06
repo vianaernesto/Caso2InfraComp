@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.Scanner;
 
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
@@ -41,8 +42,8 @@ public class ProtocoloCliente {
 			System.out.println("Respuesta del Servidor: " + fromServer );
 		}
 
-		KeyPair keyClient = KeyPairGenerator.getInstance("RSA", new BouncyCastleProvider()).generateKeyPair();
-		pOut.println(generarCertificado(keyClient));
+		KeyPair llaveCliente = KeyPairGenerator.getInstance("RSA", new BouncyCastleProvider()).generateKeyPair();
+		pOut.println(generarCertificado(llaveCliente));
 
 		if((fromServer = pIn.readLine())!= null) {
 			System.out.println("Respuesta del Servidor: " + fromServer );
@@ -52,18 +53,38 @@ public class ProtocoloCliente {
 
 
 		byte[] arr = new byte[32];
-		SecretKey llaveSesion = new SecretKeySpec(arr,"AES");
+		SecretKey sesion = new SecretKeySpec(arr,"AES");
 		
-		String llaveCifrada= DatatypeConverter.printHexBinary(cifradoAsimetrico(llaveServidor,llaveSesion.getEncoded()));
+		String llaveCifrada= DatatypeConverter.printHexBinary(cifradoAsimetrico(llaveServidor,sesion.getEncoded()));
 		pOut.println(llaveCifrada);
 		
 		if((fromServer = pIn.readLine())!= null) {
 			System.out.println("Respuesta del Servidor: " + fromServer );
 		}
 		
+		byte[] llaveServidorCifrada= DatatypeConverter.parseHexBinary(fromServer);
+		SecretKey llaveLS=new SecretKeySpec(descifradoAsimetrico(llaveCliente,llaveServidorCifrada),"AES");
 		
+		System.out.println("Escriba la coordenada: ");
+		Scanner cordenadas= new Scanner(System.in);
+		String msg =cordenadas.nextLine(); 
+		cordenadas.close();
+		
+		byte[] coordenadasEncriptadas = cifradoSimetricoAES(llaveLS,msg.getBytes());
+		//byte[] msgEnBytesEncriptados= cifradoSimetricoBlowfish(llaveLS,msg.getBytes());
+		
+		byte[] coordenadasHMAC = hmac(msg.getBytes(),llaveLS, "HMACMD5");
+
+		String criptoStr= DatatypeConverter.printHexBinary(coordenadasEncriptadas);
+		String hmacStr= DatatypeConverter.printHexBinary(coordenadasHMAC);
 		
 		pOut.println("OK");
+		pOut.println(criptoStr);
+		pOut.println(hmacStr);
+		
+		if((fromServer = pIn.readLine())!= null) {
+			System.out.println("Respuesta del Servidor: " + fromServer );
+		}
 		
 		
 	}
@@ -107,5 +128,31 @@ public class ProtocoloCliente {
 		cipher.init(Cipher.ENCRYPT_MODE, llave);
 		return cipher.doFinal(msg);
 	}
+	
+	public static byte[] descifradoAsimetrico(KeyPair llave, byte[] msg) throws Exception {
+		Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.DECRYPT_MODE, llave.getPrivate());
+		return cipher.doFinal(msg);
+	}
+	
+	public static byte[] cifradoSimetricoAES(SecretKey llave, byte[] clearText) throws Exception {
+		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+		cipher.init(Cipher.ENCRYPT_MODE, llave);
+		return cipher.doFinal(clearText);
+	}
+	
+	public static byte[] cifradoSimetricoBlowfish(SecretKey llave, byte[] clearText) throws Exception {
+		Cipher cipher = Cipher.getInstance("Blowfish");
+		cipher.init(Cipher.ENCRYPT_MODE, llave);
+		return cipher.doFinal(clearText);
+	}
+	
+	private static byte[] hmac(byte[] msg, SecretKey key, String alg) throws Exception {
+		Mac mac = Mac.getInstance(alg);
+		mac.init(key);
+		byte[] bytes = mac.doFinal(msg);
+		return bytes;
+	}
+	
 
 }
