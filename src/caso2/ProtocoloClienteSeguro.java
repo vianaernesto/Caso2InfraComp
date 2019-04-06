@@ -141,11 +141,12 @@ public class ProtocoloClienteSeguro {
 		// Se convierte la respuesta del servidor.
 		byte[] respuestaServidor = DatatypeConverter.parseHexBinary(fromServer);
 		// Se obtiene el codigo de autenticacion
-		byte[] hmacRespuesta= descifradoAsimetrico(parServidor,respuestaServidor,"publica");
+		byte[] codigoVerificacionRecibido= descifradoAsimetrico(parServidor,respuestaServidor,"publica");
 		
+		System.out.println("Codigo de Verificacion recibido: " + DatatypeConverter.printHexBinary(codigoVerificacionRecibido));
 
-		
-		if(Arrays.equals(hmacRespuesta, codigoAutenticacion)) {
+		// Verificacion de integridad
+		if(Arrays.equals(codigoVerificacionRecibido, codigoAutenticacion)) {
 			System.out.println("Verificacion de integridad: OK");
 		}
 		

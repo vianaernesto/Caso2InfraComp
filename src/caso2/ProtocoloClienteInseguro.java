@@ -25,49 +25,93 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 public class ProtocoloClienteInseguro {
+	
+	public static final String SIMETRICO = "AES";
+	
+	public static final String ASIMETRICO = "RSA";
+	
+	public static final String HMAC = "HMACSHA256";
+	
+	public static int id;
 
 	public static void procesar(BufferedReader stdIn, BufferedReader pIn,PrintWriter pOut) throws Exception {
 
 		pOut.println("HOLA");
 
+		System.out.println("Enviando HOLA al servidor");
+			
 		String fromServer="";
 
 		if((fromServer = pIn.readLine())!= null) {
 			System.out.println("Respuesta del Servidor: " + fromServer );
 		}
 
-		pOut.println("ALGORITMOS:AES:RSA:HMACSHA1");
+		System.out.println("Algoritmos que se van a usar:");
+		System.out.println("Para manejo de confidencialidad de envio de llaves: " + ASIMETRICO);
+		System.out.println("Para manejo de confidencialidad de sesion: " + SIMETRICO);
+		System.out.println("Para manejo de integridad: " + HMAC);
+		System.out.println("Enviando al servidor: ALGORITMOS:" + SIMETRICO + ":" + ASIMETRICO + ":" + HMAC);
+		
+		pOut.println("ALGORITMOS:" + SIMETRICO + ":" + ASIMETRICO + ":" + HMAC);
 
 		if((fromServer = pIn.readLine())!= null) {
 			System.out.println("Respuesta del Servidor: " + fromServer );
 		}
 
-		KeyPair llaveCliente = KeyPairGenerator.getInstance("RSA", new BouncyCastleProvider()).generateKeyPair();
-		pOut.println(generarCertificado(llaveCliente));
+		// Creando llaves Asimetricas que el cliente va a utilizar
+		KeyPair llaveCliente = KeyPairGenerator.getInstance(ASIMETRICO, new BouncyCastleProvider()).generateKeyPair();
+		
+		// Generacion del certificado
+		String certificado = generarCertificado(llaveCliente);
+		
+		System.out.println("Enviando el certificado del cliente: " + certificado);	
 
+		// Envio del Certificado
+		pOut.println(certificado);
+		
 		if((fromServer = pIn.readLine())!= null) {
-			System.out.println("Respuesta del Servidor: " + fromServer );
+			System.out.println("Certificado del Servidor: " + fromServer );
 		}
-
-		byte[] arr = new byte[128];
+		
+		// Se obtiene la llave publica del servidor para generar la cadena de bytes.
+		PublicKey llaveServidor = leerCertificado(fromServer).getPublicKey();		
+		
+		// Se crea la cadena de bytes.
+		byte[] arr = llaveServidor.getEncoded();
 		String cadenaBytes=DatatypeConverter.printHexBinary(arr);
+		
+		// Se envia la cadena.
 		pOut.println(cadenaBytes);
 
+		
+		
+		if((fromServer = pIn.readLine())!= null) {
+			System.out.println("Llave de sesion del Servidor: " + fromServer );
+		}
+		
+		System.out.println("Se envia OK al Servidor");
+
+		pOut.println("OK");
+		
+		//Se obtienen los datos de coordenadas.
+		String gradosLatitud = String.valueOf(Math.round((Math.random() * 100)));
+		String minutosLatitud = String.valueOf( Math.random() * 100);
+		String gradosLongitud = String.valueOf(Math.round((Math.random() * 100)));
+		String minutosLongitud = String.valueOf(Math.random() * 100);
+		String msg = id + ";" + gradosLatitud + " " + minutosLatitud + "," + gradosLongitud + " " + minutosLongitud;
+
+		System.out.println("Datos: " + msg);
+		pOut.println(msg);
+		pOut.println(msg);
+
+		
 		if((fromServer = pIn.readLine())!= null) {
 			System.out.println("Respuesta del Servidor: " + fromServer );
 		}
-
-		System.out.println("Escriba la coordenada: ");
-		Scanner cordenadas= new Scanner(System.in);
-		String msg =cordenadas.nextLine(); 
-		cordenadas.close();
-
-		pOut.println("OK");
-		pOut.println(msg);
-		pOut.println(msg);
-
-		if((fromServer = pIn.readLine())!= null) {
-			System.out.println("Respuesta del Servidor: " + fromServer );
+		
+		// Verificacion
+		if(fromServer.equals(msg)) {
+			System.out.println("Verificacion de contenido: OK");
 		}
 	}
 
@@ -96,5 +140,12 @@ public class ProtocoloClienteInseguro {
 		return respuesta;
 
 
+	}
+	
+	public static X509Certificate leerCertificado(String str) throws Exception
+	{
+		byte[] certificadoEnBytes= DatatypeConverter.parseHexBinary(str);	
+		X509Certificate cert = new JcaX509CertificateConverter().getCertificate(new X509CertificateHolder(certificadoEnBytes));
+		return cert;
 	}
 }

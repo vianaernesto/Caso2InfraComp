@@ -22,6 +22,8 @@ public class ClienteInseguro {
 		System.out.println("Cliente SIN Seguridad: Establezca puerto de conexion");
 		Scanner port = new Scanner(System.in);
 		int PUERTO = port.nextInt();
+		System.out.println("Cliente SIN Seguridad: Establezca el id del cliente.");
+		int id = port.nextInt();
 		port.close();
 
 		try {
@@ -34,6 +36,8 @@ public class ClienteInseguro {
 		}
 		
 		BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+		
+		ProtocoloClienteInseguro.id = id;
 		
 		ProtocoloClienteInseguro.procesar(stdIn,lector,escritor);
 		
