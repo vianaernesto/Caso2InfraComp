@@ -51,7 +51,6 @@ public class ProtocoloCliente {
 		
 		PublicKey llaveServidor = leerCertificado(fromServer).getPublicKey();
 
-
 		byte[] arr = new byte[32];
 		SecretKey sesion = new SecretKeySpec(arr,"AES");
 		
@@ -73,10 +72,12 @@ public class ProtocoloCliente {
 		byte[] coordenadasEncriptadas = cifradoSimetricoAES(llaveLS,msg.getBytes());
 		//byte[] msgEnBytesEncriptados= cifradoSimetricoBlowfish(llaveLS,msg.getBytes());
 		
-		byte[] coordenadasHMAC = hmac(msg.getBytes(),llaveLS, "HMACMD5");
+		byte[] coordenadasHMAC = hmac(msg.getBytes(),llaveLS, "HMACSHA1");
 
 		String criptoStr= DatatypeConverter.printHexBinary(coordenadasEncriptadas);
 		String hmacStr= DatatypeConverter.printHexBinary(coordenadasHMAC);
+
+		
 		
 		pOut.println("OK");
 		pOut.println(criptoStr);
@@ -85,6 +86,7 @@ public class ProtocoloCliente {
 		if((fromServer = pIn.readLine())!= null) {
 			System.out.println("Respuesta del Servidor: " + fromServer );
 		}
+		
 		
 		
 	}
@@ -139,6 +141,12 @@ public class ProtocoloCliente {
 		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 		cipher.init(Cipher.ENCRYPT_MODE, llave);
 		return cipher.doFinal(clearText);
+	}
+	
+	public static byte[] descifradoSimetricoAES(SecretKey llave, byte[] msg) throws Exception {
+		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+		cipher.init(Cipher.DECRYPT_MODE, llave);
+		return cipher.doFinal(msg);
 	}
 	
 	public static byte[] cifradoSimetricoBlowfish(SecretKey llave, byte[] clearText) throws Exception {
