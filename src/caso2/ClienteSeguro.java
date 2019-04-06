@@ -8,11 +8,11 @@ import java.net.Socket;
 
 public class ClienteSeguro {
 
-	public static final int PUERTO = 3400;
+	public static final int PUERTO = 8080;
 
 	public static final String SERVIDOR = "localhost";
 
-	public static void main(String args[]) throws IOException {
+	public static void main(String args[]) throws Exception {
 
 		Socket socket = null;
 		PrintWriter escritor = null;
