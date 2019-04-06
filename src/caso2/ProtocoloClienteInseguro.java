@@ -115,6 +115,12 @@ public class ProtocoloClienteInseguro {
 		}
 	}
 
+	/**
+	 * Generador de certificados
+	 * @param pair Par de llaves del cliente
+	 * @return Certificado
+	 * @throws Exception multiples, segun la clase
+	 */
 	public static String generarCertificado(KeyPair pair) throws Exception
 	{
 
@@ -142,6 +148,12 @@ public class ProtocoloClienteInseguro {
 
 	}
 	
+	/**
+	 * Lector de certificado, obtiene un certificado X509 a partir de un certificado String.
+	 * @param str Certificado en forma de string.
+	 * @return X509 certificado.
+	 * @throws Exception
+	 */
 	public static X509Certificate leerCertificado(String str) throws Exception
 	{
 		byte[] certificadoEnBytes= DatatypeConverter.parseHexBinary(str);	

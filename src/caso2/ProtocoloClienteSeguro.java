@@ -152,6 +152,12 @@ public class ProtocoloClienteSeguro {
 		
 	}
 
+	/**
+	 * Generador de certificados
+	 * @param pair Par de llaves del cliente
+	 * @return Certificado
+	 * @throws Exception multiples, segun la clase
+	 */
 	public static String generarCertificado(KeyPair pair) throws Exception
 	{
 
@@ -178,7 +184,13 @@ public class ProtocoloClienteSeguro {
 
 
 	}
-
+	
+	/**
+	 * Lector de certificado, obtiene un certificado X509 a partir de un certificado String.
+	 * @param str Certificado en forma de string.
+	 * @return X509 certificado.
+	 * @throws Exception
+	 */
 	public static X509Certificate leerCertificado(String str) throws Exception
 	{
 		byte[] certificadoEnBytes= DatatypeConverter.parseHexBinary(str);	
@@ -186,12 +198,28 @@ public class ProtocoloClienteSeguro {
 		return cert;
 	}
 	
+	/**
+	 * Cifra un mensaje Asimetricamente con el algoritmo RSA
+	 * @param llave, llave con la que se va a cifrar
+	 * @param msg mensaje que se va a cifrar
+	 * @return mensaje cifrado.
+	 * @throws Exception excepciones de cipher
+	 */
 	public static byte[] cifradoAsimetrico(PublicKey llave, byte[] msg) throws Exception {
 		Cipher cipher = Cipher.getInstance(ASIMETRICO);
 		cipher.init(Cipher.ENCRYPT_MODE, llave);
 		return cipher.doFinal(msg);
 	}
 	
+	/**
+	 * Descifra un mensaje a partir de la llave y el mensaje y un tipoLlave asimetricamente, 
+	 * con el algoritmo RSA.
+	 * @param llave par de llaves de las cuales se va a utilizar una llave (publica o privada)
+	 * @param msg mensaje que se va a descifrar.
+	 * @param tipoLlave tipo de llave que se va a utilizar, publica o privada.
+	 * @return mensaje descifrado.
+	 * @throws Exception excepciones de cipher.
+	 */
 	public static byte[] descifradoAsimetrico(KeyPair llave, byte[] msg,String tipoLlave) throws Exception {
 		
 		byte[] descifrado = null;
@@ -207,18 +235,40 @@ public class ProtocoloClienteSeguro {
 		return descifrado;
 	}
 	
+	/**
+	 * Cifra simetricamente con el algoritmo AES.
+	 * @param llave, llave con la cual se va a cifrar.
+	 * @param clearText mensaje que se va a encriptar.
+	 * @return mensaje cifrado
+	 * @throws Exception excepciones de cipher.
+	 */
 	public static byte[] cifradoSimetricoAES(SecretKey llave, byte[] clearText) throws Exception {
 		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 		cipher.init(Cipher.ENCRYPT_MODE, llave);
 		return cipher.doFinal(clearText);
 	}
 	
+	/**
+	 * Descifra simetricamente con el algoritmo AES.
+	 * @param llave, llave con la cual se va a descifrar.
+	 * @param clearText mensaje que se va a desencriptar.
+	 * @return mensaje cifrado
+	 * @throws Exception excepciones de cipher.
+	 */
 	public static byte[] descifradoSimetricoAES(SecretKey llave, byte[] msg) throws Exception {
 		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 		cipher.init(Cipher.DECRYPT_MODE, llave);
 		return cipher.doFinal(msg);
 	}
 	
+	/**
+	 * Metodo que genera el codigo de verificacion de integridad HMAC
+	 * @param msg mensaje del cual se va a obtener el codigo.
+	 * @param key llave con la cual se genera el codigo.
+	 * @param alg algoritmo que se va a usar.
+	 * @return codigo de verificacion de integridad.
+	 * @throws Exception excepciones de mac.
+	 */
 	private static byte[] hmac(byte[] msg, SecretKey key, String alg) throws Exception {
 		Mac mac = Mac.getInstance(alg);
 		mac.init(key);
