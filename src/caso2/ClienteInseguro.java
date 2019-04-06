@@ -6,7 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class ClienteSeguro {
+public class ClienteInseguro {
 
 	public static final int PUERTO = 8080;
 
@@ -31,11 +31,12 @@ public class ClienteSeguro {
 		
 		BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 		
-		ProtocoloClienteSeguro.procesar(stdIn,lector,escritor);
+		ProtocoloClienteInseguro.procesar(stdIn,lector,escritor);
 		
 		stdIn.close();
 		escritor.close();
 		lector.close();
 		socket.close();
 	}
+
 }
