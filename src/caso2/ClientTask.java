@@ -20,7 +20,7 @@ public class ClientTask extends Task{
 	@Override
 	public void execute() {
 		try {
-		//	Cliente cliente = new Cliente(Cliente.SEGURIDAD);
+		Cliente cliente = new Cliente(Cliente.SEGURIDAD);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

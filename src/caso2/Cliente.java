@@ -35,6 +35,8 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 public class Cliente {
 
 	public static final String SERVIDOR = "localhost";
+	
+	public static final int PUERTO = 8080;
 
 	public static final String SIMETRICO = "AES";
 
@@ -42,26 +44,29 @@ public class Cliente {
 
 	public static final String HMAC = "HMACSHA256";
 
-	public static int id;
+	public static final int id = 1;
 
 	/**
 	 * SEGURO 
 	 * NOSEGURO
 	 */
-	public static String SEGURIDAD = "NOSEGURO";
+	public static String SEGURIDAD = "SEGURO";
 
-	public static void main(String args[]) throws Exception {
+	public static int NUMERO_CARGA = 80; 
+	public static int RETRASO= 100;  
+
+	public Cliente(String seguridad) throws Exception {
 
 		Socket socket = null;
 		PrintWriter escritor = null;
 		BufferedReader lector = null;
 
 		System.out.println("Cliente SIN/CON Seguridad: Establezca puerto de conexion");
-		Scanner port = new Scanner(System.in);
-		int PUERTO = port.nextInt();
-		System.out.println("Cliente SIN/CON Seguridad: Establezca el id del cliente.");
-		int idx = port.nextInt();
-		port.close();
+		//Scanner port = new Scanner(System.in);
+		//int PUERTO = port.nextInt();
+		//System.out.println("Cliente SIN/CON Seguridad: Establezca el id del cliente.");
+		//int idx = port.nextInt();
+		//port.close();
 
 		try {
 			socket = new Socket(SERVIDOR,PUERTO);
@@ -74,9 +79,9 @@ public class Cliente {
 
 		BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
-		id	= idx;
+		//id	= idx;
 
-		if(SEGURIDAD == "SEGURO")
+		if(seguridad  == "SEGURO")
 			procesarSeguro(stdIn,lector,escritor);
 		else
 			procesarInseguro(stdIn,lector,escritor);
@@ -407,5 +412,10 @@ public class Cliente {
 		mac.init(key);
 		byte[] bytes = mac.doFinal(msg);
 		return bytes;
+	}
+
+	public static void main(String[] args) throws Exception
+	{
+			Generator gen = new Generator( Cliente.NUMERO_CARGA, Cliente.RETRASO); 
 	}
 }
