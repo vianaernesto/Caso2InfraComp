@@ -35,7 +35,7 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 public class Cliente {
 
 	public static final String SERVIDOR = "localhost";
-	
+
 	public static final int PUERTO = 8080;
 
 	public static final String SIMETRICO = "AES";
@@ -52,8 +52,8 @@ public class Cliente {
 	 */
 	public static String SEGURIDAD = "SEGURO";
 
-	public static int NUMERO_CARGA = 80; 
-	public static int RETRASO= 100;  
+	public static int numero_carga; 
+	public static int retraso;  
 
 	public Cliente(String seguridad) throws Exception {
 
@@ -61,12 +61,12 @@ public class Cliente {
 		PrintWriter escritor = null;
 		BufferedReader lector = null;
 
-		System.out.println("Cliente SIN/CON Seguridad: Establezca puerto de conexion");
-		//Scanner port = new Scanner(System.in);
-		//int PUERTO = port.nextInt();
-		//System.out.println("Cliente SIN/CON Seguridad: Establezca el id del cliente.");
-		//int idx = port.nextInt();
-		//port.close();
+		System.out.println("Ingrese número de carga");
+		Scanner num = new Scanner(System.in);
+		numero_carga = num.nextInt();
+		System.out.println("Ingrese el retraso");
+		retraso = num.nextInt();
+		num.close();
 
 		try {
 			socket = new Socket(SERVIDOR,PUERTO);
@@ -416,6 +416,6 @@ public class Cliente {
 
 	public static void main(String[] args) throws Exception
 	{
-			Generator gen = new Generator( Cliente.NUMERO_CARGA, Cliente.RETRASO); 
+		Generator gen = new Generator( numero_carga, retraso); 
 	}
 }
