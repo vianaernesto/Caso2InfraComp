@@ -56,7 +56,7 @@ private ArrayList<Double> cpuList;
 			
 		} else {
 			try {
-				TimeUnit.SECONDS.sleep(1);
+				TimeUnit.MILLISECONDS.sleep(1500);
 				cpuUsage = getProcessCpuLoad();
 				cpuList.add(cpuUsage);
 			} catch (Exception e) {

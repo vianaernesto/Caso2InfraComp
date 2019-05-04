@@ -85,6 +85,10 @@ public class C {
 		celda = fila.createCell(1);
 
 		celda.setCellValue("CPU");
+		
+		celda = fila.createCell(2);
+		
+		celda.setCellValue("Transacciones Terminadas");
 
 		for(int i = 0; i < nPruebas;i++){
 			fila = hoja.createRow(i+1);
@@ -92,6 +96,11 @@ public class C {
 			celda.setCellValue(monitor.getTiemposSolicitud().get(i));
 			celda = fila.createCell(1);
 			celda.setCellValue(monitor.getCpuList().get(i));
+			
+			if(i == 0) {
+				celda = fila.createCell(2);
+				celda.setCellValue(monitor.getTransacciones());
+			}
 		}
 
 		try{
