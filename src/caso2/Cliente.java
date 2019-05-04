@@ -54,20 +54,13 @@ public class Cliente {
 
 	public static int numero_carga; 
 	public static int retraso;  
+	public static int seg;
 
 	public Cliente(String seguridad) throws Exception {
 
 		Socket socket = null;
 		PrintWriter escritor = null;
 		BufferedReader lector = null;
-
-		System.out.println("Ingrese número de carga");
-		Scanner num = new Scanner(System.in);
-		numero_carga = num.nextInt();
-		System.out.println("Ingrese el retraso");
-		retraso = num.nextInt();
-		num.close();
-
 		try {
 			socket = new Socket(SERVIDOR,PUERTO);
 			escritor = new PrintWriter(socket.getOutputStream(), true);
@@ -78,10 +71,12 @@ public class Cliente {
 		}
 
 		BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+		
+		if(seg != 1) {
+			SEGURIDAD = "INSEGURO";
+		}
 
-		//id	= idx;
-
-		if(seguridad  == "SEGURO")
+		if(SEGURIDAD  == "SEGURO")
 			procesarSeguro(stdIn,lector,escritor);
 		else
 			procesarInseguro(stdIn,lector,escritor);
@@ -416,6 +411,14 @@ public class Cliente {
 
 	public static void main(String[] args) throws Exception
 	{
+		System.out.println("Ingrese el tamaño de la carga");
+		Scanner num = new Scanner(System.in);
+		numero_carga = num.nextInt();
+		System.out.println("Ingrese el retraso en milisegundos");
+		retraso = num.nextInt();
+		System.out.println("Ingrese 1 para comunicación segura, 2 para comunicación insegura");
+		seg = num.nextInt();
+		num.close();
 		Generator gen = new Generator( numero_carga, retraso); 
 	}
 }
