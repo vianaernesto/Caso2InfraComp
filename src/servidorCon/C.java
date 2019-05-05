@@ -88,7 +88,6 @@ public class C {
 		celda = fila.createCell(2);
 		
 		celda.setCellValue("Transacciones Terminadas");
-		
 
 		for(int i = 0; i < nPruebas;i++){
 			fila = hoja.createRow(i+1);

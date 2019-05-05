@@ -62,16 +62,16 @@ public class C {
 				D d = new D(sc,idThread, monitor);
 				pool.execute(d);
 				idThread++;
-				
+
 			}
 		} catch (IOException e) {
 			System.out.println(MAESTRO + "Error creando el socket cliente.");
 			e.printStackTrace();
 		}
-		
+
 		pool.shutdown();
 		pool.awaitTermination(10000000, TimeUnit.SECONDS);
-		
+
 		HSSFWorkbook libro = new HSSFWorkbook();
 
 		HSSFSheet hoja =  libro.createSheet();
@@ -85,10 +85,11 @@ public class C {
 		celda = fila.createCell(1);
 
 		celda.setCellValue("CPU");
-		
+
 		celda = fila.createCell(2);
-		
+
 		celda.setCellValue("Transacciones Terminadas");
+
 
 		for(int i = 0; i < nPruebas;i++){
 			fila = hoja.createRow(i+1);
@@ -96,7 +97,7 @@ public class C {
 			celda.setCellValue(monitor.getTiemposSolicitud().get(i));
 			celda = fila.createCell(1);
 			celda.setCellValue(monitor.getCpuList().get(i));
-			
+
 			if(i == 0) {
 				celda = fila.createCell(2);
 				celda.setCellValue(monitor.getTransacciones());
@@ -104,13 +105,13 @@ public class C {
 		}
 
 		try{
-			
+
 			FileOutputStream file = new FileOutputStream("pruebas/DatosSinSeguridad.xls");
 			libro.write(file);
 			file.flush();
 			file.close();
 			libro.close();
-			
+
 		}catch(Exception e3){
 			e3.printStackTrace();
 		}
