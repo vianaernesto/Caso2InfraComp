@@ -104,7 +104,7 @@ public class C {
 
 		try{
 			
-			FileOutputStream file = new FileOutputStream("pruebas/DatosConSeguridad.xls");
+			FileOutputStream file = new FileOutputStream("pruebas/DatosConSeguridadPrueba.xls");
 			libro.write(file);
 			file.flush();
 			file.close();
